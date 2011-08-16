@@ -149,17 +149,16 @@ class BoxDotNet(object):
 
         self.__handlerCache={}
 
+    #encodes the args and handles params[] supplied in a list
     @classmethod
-    def __fix_args(cls, **arg):
-        for key in arg.keys():
-            if isinstance(arg[key], list):
-                arg[key] = ','.join(arg[key])
-
-                value = arg[key]
-                arg[key + '[]'] = value
-                del arg[key]
-
-        return arg
+    def __url_encode_params(cls, params={}):
+    	if not isinstance(params, dict):
+    		raise Exception("You must pass a dictionary!")
+    	params_list = []
+    	for k,v in params.items():
+    		if isinstance(v, list): params_list.extend([(k+'[]',x) for x in v])
+    		else:					params_list.append((k, v))
+    	return urllib.urlencode(params_list)
 
     @classmethod
     def check_errors(cls, method, xml):
@@ -189,11 +188,9 @@ class BoxDotNet(object):
         """
         if not self.__handlerCache.has_key(method):
             def handler(_self = self, _method = method, **arg):
-                arg = _self.__fix_args(**arg)
-
                 url = _self.END_POINT
                 arg["action"] = _method
-                postData = urllib.urlencode(arg)
+                postData = _self.__url_encode_params(params=arg)
                 # print "--url---------------------------------------------"
                 # print url
                 # print "--postData----------------------------------------"
